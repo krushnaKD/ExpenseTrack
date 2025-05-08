@@ -2,16 +2,28 @@ const jwt  = require("jsonwebtoken");
 const USER = require("../models/user");
 
 exports.protect = async(req,res,next)=>{
-    let token = req.headers.authorization?.split(" ")[1];
-    if(!token) return res.status(401).json({msg:"Not Authorized no token"});
-
     try {
-        const decode = jwt.verify(token,process.env.JWT_SECERT);
-        console.log(decode);
+        console.log(req.cookies);
         
-         req.user = await USER.findById(decode.id.select('-password'));
-         next()
-    } catch (error) {
-        res.status(401).json({msg:"Not authorized , token failed"})
-    }
+        const { token } = req.cookies;
+        
+        
+        if (!token) {
+         return  res.status(401).send("please Login !");
+        }
+    
+        const decodeData = await jwt.verify(token, "Dev@Tinder$431");
+         
+        const { _id } = decodeData;
+        const user = await USER.findById(_id);
+    
+        if (!user) {
+          throw new Error("User Invalid");
+        }
+        req.user = user;
+    
+        next();
+      } catch (err) {
+        res.status(400).send(err.message);
+      }
 }

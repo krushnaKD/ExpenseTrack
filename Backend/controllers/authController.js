@@ -26,11 +26,15 @@ exports.registerUser = async (req, res) => {
       profileImageUrl,
     });
 
-    res.status(201).json({
-      id: user._id,
-      user,
-      token: generateToken(user._id),
-    });
+    const token = await user.getJWT()
+    res.cookie("token", token);
+
+    // res.status(201).json({
+    //   id: user._id,
+    //   user,
+    //   token: generateToken(user._id),
+    // });
+    res.send(user)
   } catch (error) {
     res.status(400).json({ msg: error.message });
   }
@@ -51,12 +55,15 @@ exports.loginUser = async (req, res) => {
             return res.status(400).json({msg :"Invalid Creadentials"})
         }
 
-      res.status(200).json({
-        msg:"logged IN ",
-        id:user._id,
-        user,
-        token:generateToken(user._id)
-      })
+        const token = await user.getJWT()
+            
+        console.log(token);
+
+        res.cookie("token", token);
+      
+        res.send(user);
+        
+    
  
 
     } catch (error) {
@@ -68,18 +75,12 @@ exports.loginUser = async (req, res) => {
 };
 
 exports.getUserInfo = async (req, res) => {
-    console.log("hee");
     
-    try {
-        
-        const user = await USER.findById(req.user.id).select("-password");
-        
-        if(!user){
-            return res.status(404).json({msg:"User Not Found"})
-        }
+   try{
+    const user = req.user;
 
-
-     res.status(200).json(user)
+    res.send(user);
+  
 
     } catch (error) {
         res.send(error.message)
